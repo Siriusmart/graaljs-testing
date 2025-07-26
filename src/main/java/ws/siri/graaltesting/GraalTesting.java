@@ -4,11 +4,14 @@ import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
 
 import org.graalvm.polyglot.Context;
+import org.graalvm.polyglot.Engine;
 
 import net.fabricmc.api.ModInitializer;
 
 public class GraalTesting implements ModInitializer {
 	public static final String MOD_ID = "graaltesting";
+
+	private static final Engine engine = Engine.create("js");
 
 	@Override
 	public void onInitialize() {
@@ -30,7 +33,7 @@ public class GraalTesting implements ModInitializer {
 	}
 
 	public static void doStuff() {
-		Context ctx = Context.newBuilder("js").allowAllAccess(true).build();
+		Context ctx = Context.newBuilder("js").allowAllAccess(true).engine(engine).build();
 		ctx.eval("js", "let String = Packages.java.lang.String;");
 		ctx.eval("js", "let GraalTesting = Packages.ws.siri.graaltesting.GraalTesting;");
 		ctx.eval("js", "GraalTesting.bonk();");
@@ -45,6 +48,6 @@ public class GraalTesting implements ModInitializer {
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-		});
+		}).join();
 	}
 }
