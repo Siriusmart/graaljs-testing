@@ -1,11 +1,9 @@
 package ws.siri.graaltesting;
 
 import java.io.IOException;
+import java.util.concurrent.CompletableFuture;
 
 import org.graalvm.polyglot.Context;
-import org.graalvm.polyglot.Source;
-
-import com.oracle.truffle.js.runtime.objects.Undefined;
 
 import net.fabricmc.api.ModInitializer;
 
@@ -14,23 +12,39 @@ public class GraalTesting implements ModInitializer {
 
 	@Override
 	public void onInitialize() {
-		try {
-			doStuff();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		System.out.println("Blocking");
+		doStuff();
+
+		CompletableFuture.runAsync(() -> {
+			try {
+				System.out.println("Async");
+				doStuff();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		});
 	}
 
-	public static void doStuff() throws IOException {
-		Context ctx = Context.create("js");
+	public static void bonk() {
+		System.out.println("hi");
+	}
 
-		ctx.getBindings("js").putMember("module", Undefined.instance);
-		ctx.eval("js", "let x = 5");
-		ctx.eval(Source.newBuilder("js", "let y = x + 5", "test.js").build());
-		System.out.println(ctx.getBindings("js").getMember("y"));
+	public static void doStuff() {
+		Context ctx = Context.newBuilder("js").allowAllAccess(true).build();
+		ctx.eval("js", "let String = Packages.java.lang.String;");
+		ctx.eval("js", "let GraalTesting = Packages.ws.siri.graaltesting.GraalTesting;");
+		ctx.eval("js", "GraalTesting.bonk();");
 	}
 
 	public static void main(String[] args) throws IOException {
 		doStuff();
+
+		CompletableFuture.runAsync(() -> {
+			try {
+				doStuff();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		});
 	}
 }
